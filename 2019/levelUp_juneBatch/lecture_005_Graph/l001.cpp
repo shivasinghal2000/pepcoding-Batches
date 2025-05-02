@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <queue>
+#include <stack>
 
 using namespace std;
 
@@ -36,6 +38,11 @@ void addEdge(int u, int v, int w)
 {
     graph[u].push_back(Edge(v, w));
     graph[v].push_back(Edge(u, w));
+}
+
+void addEdge2(int u, int v, int w)
+{
+    graph[u].push_back(Edge(v, w));
 }
 
 int searchVrtx(int u, int v)
@@ -275,6 +282,248 @@ void GCC()
     }
 }
 
+//BFS.============================================================
+
+void BFS_01(int src, vector<bool> &vis)
+{
+    queue<int> que;
+    que.push(src);
+    int desti = 6;
+
+    while (que.size() != 0)
+    {
+        int rvtx = que.front();
+        que.pop();
+
+        vis[rvtx] = true;
+        for (Edge e : graph[rvtx])
+        {
+            if (!vis[e.v])
+                que.push(e.v);
+        }
+    }
+}
+
+void BFS_02(int src, vector<bool> &vis)
+{
+    queue<int> que;
+    que.push(src);
+    int desti = 6;
+
+    int level = 0;
+    while (que.size() != 0)
+    {
+        int size = que.size();
+        while (size-- > 0)
+        {
+            int rvtx = que.front();
+            que.pop();
+
+            if (vis[rvtx])
+                continue;
+            
+            vis[rvtx] = true;
+            for (Edge e : graph[rvtx])
+            {
+                if (!vis[e.v])
+                    que.push(e.v);
+            }
+        }
+        level++;
+    }
+}
+
+void BFS_03(int src, vector<bool> &vis)
+{
+    queue<int> que;
+    que.push(src);
+    int desti = 6;
+
+    int level = 0;
+    vis[src] = true;
+    while (que.size() != 0)
+    {
+        int size = que.size();
+        while (size-- > 0)
+        {
+            int rvtx = que.front();
+            que.pop();
+
+            for (Edge e : graph[rvtx])
+            {
+                if (!vis[e.v])
+                {
+                    vis[e.v] = true;
+                    que.push(e.v);
+                }
+            }
+        }
+        level++;
+    }
+}
+
+void GCC_UsingBFS()
+{
+    vector<bool> vis(N, false);
+    int count = 0;
+    for (int i = 0; i < N; i++)
+    {
+        if (!vis[i])
+        {
+            BFS_03(i, vis);
+            count++;
+        }
+    }
+}
+
+//Topological Sort.=============================================================================
+
+void topoDFS(int src, vector<bool> &vis, stack<int> &st)
+{
+    vis[src] = true;
+    for (Edge e : graph[src])
+    {
+        if (!vis[e.v])
+            topoDFS(e.v, vis, st);
+    }
+
+    st.push(src);
+}
+
+void topologicalSort()
+{
+    vector<bool> vis(N, false);
+    stack<int> st;
+
+    for (int i = 0; i < N; i++)
+    {
+        if (!vis[i])
+            topoDFS(i, vis, st);
+    }
+}
+
+void kahnsAlgo()
+{
+
+    vector<int> indegre(N, 0);
+    for (int i = 0; i < N; i++)
+    {
+        for (Edge e : graph[i])
+            indegre[e.v]++;
+    }
+
+    queue<int> que;
+    vector<int> ans;
+
+    for (int i = 0; i < N; i++)
+    {
+        if (indegre[i] == 0)
+            que.push(i);
+    }
+
+    while (que.size() != 0)
+    {
+        int rvtx = que.front();
+        que.pop();
+
+        ans.push_back(rvtx);
+        for (Edge e : graph[rvtx])
+        {
+            if (--indegre[e.v] == 0)
+                que.push(e.v);
+        }
+    }
+
+    if (ans.size() != N)
+        cout << "There is a Cycle:" << endl;
+    else
+    {
+        for (int ele : ans)
+            cout << ele << " ";
+    }
+}
+
+//KosaRaju's Algo for strongly Connected Components.
+
+void dfs(int src, vector<bool> &vis, vector<vector<Edge>> &graph, vector<int> &res)
+{
+    vis[src] = true;
+    for (Edge e : graph[src])
+    {
+        if (!vis[e.v])
+            dfs(e.v, vis, graph, res);
+    }
+
+    res.push_back(src);
+}
+
+void KosaRajuAlgoFor_SCC()
+{
+    vector<bool> vis(N, false);
+    vector<int> res;
+
+    for (int i = 0; i < N; i++)
+        if (!vis[i])
+            dfs(i, vis, graph, res);
+
+    vector<vector<Edge>> gp(N, vector<Edge>());
+    for (int i = 0; i < N; i++)
+        for (Edge e : graph[i])
+            gp[e.v].push_back(Edge(i, e.w));
+
+    for (int i = 0; i < N; i++)
+        vis[i] = false;
+    int count = 1;
+    vector<int> vtx;
+
+    for (int i = res.size() - 1; i >= 0; i--)
+        if (!vis[res[i]])
+        {
+            dfs(res[i], vis, gp, vtx);
+            cout << count++ << " -> ";
+            while (vtx.size() != 0)
+            {
+                cout << vtx.back() << ", ";
+                vtx.pop_back();
+            }
+            cout << endl;
+        }
+}
+
+void BFS()
+{
+
+    vector<bool> vis(N, false);
+    BFS_01(0, vis);
+}
+
+void constructDirectedGraph()
+{
+    N = 11;
+    graph.resize(N, vector<Edge>());
+
+    addEdge2(0, 5, 10);
+    addEdge2(6, 0, 10);
+    addEdge2(5, 6, 40);
+
+    addEdge2(6, 8, 10);
+
+    addEdge2(8, 9, 10);
+    addEdge2(9, 10, 2);
+    addEdge2(10, 8, 2);
+
+    addEdge2(10, 7, 10);
+
+    addEdge2(7, 3, 8);
+    addEdge2(3, 1, 3);
+    addEdge2(1, 2, 8);
+    addEdge2(2, 7, 3);
+
+    addEdge2(2, 4, 8);
+
+    KosaRajuAlgoFor_SCC();
+}
+
 void constructGraph()
 {
     N = 7;
@@ -294,18 +543,18 @@ void constructGraph()
     addEdge(4, 6, 8);
     addEdge(5, 6, 3);
 
-    addEdge(0, 6, 10);
+    // addEdge(0, 6, 10);
 
     display();
 }
 
 void solve()
 {
-    constructGraph();
+    // constructGraph();
     // removeVtx(3);
     // display();
 
-    vector<bool> vis(N, false);
+    // vector<bool> vis(N, false);
 
     // preorder(0, "", vis);
     // cout << allPath(0, 6, "", vis) << endl;
@@ -314,7 +563,10 @@ void solve()
     // pathPair p = smallestPath(0, 6, vis);
     // cout << p.path << " @ " << p.len << endl;
 
-    cout << hamintoninPath(0, 0, 0, vis, "") << endl;
+    // cout << hamintoninPath(0, 0, 0, vis, "") << endl;
+    // BFS();
+
+    constructDirectedGraph();
 }
 
 int main()

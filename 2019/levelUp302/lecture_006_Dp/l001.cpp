@@ -503,7 +503,7 @@ int count_of_ways(int n, int k, vector<vector<int>> &dp)
     if (n == k || k == 1)
         return dp[k][n] = 1;
 
-    if (dp[k][n] != 0)
+    if (dp[k][n] != -1)
         return dp[k][n];
 
     int newGroup = count_of_ways(n - 1, k - 1, dp);
@@ -521,7 +521,10 @@ int count_of_ways_DP(int n, int k, vector<vector<int>> &dp)
         for (n = 0; n <= N; n++)
         {
             if (n < k)
+            {
+                dp[k][n] = 0;
                 continue;
+            }
 
             if (n == k || k == 1)
             {
@@ -544,7 +547,7 @@ void count_of_ways(int n, int k)
     if (n < k)
         return;
 
-    vector<vector<int>> dp(k + 1, vector<int>(n + 1, 0));
+    vector<vector<int>> dp(k + 1, vector<int>(n + 1, -1));
     // cout << count_of_ways(n, k, dp) << endl;
     cout << count_of_ways_DP(n, k, dp) << endl;
 
@@ -633,7 +636,7 @@ int countAllPlaindromicSubstring(string str)
 int longestPlaindromeSubseq_Rec(string str, int si, int ei, vector<vector<int>> &dp)
 {
     if (si > ei)
-        return 0;
+        return dp[si][ei] = 0;
     if (si == ei)
         return dp[si][ei] = 1;
     if (dp[si][ei] != 0)
@@ -1400,6 +1403,265 @@ int findNumberOfLIS(vector<int> &arr)
 
 //==============================================================================================================
 
+//Leetcode :91. Decode Ways
+
+int numDecodings_(string &s, int vidx, vector<int> &dp)
+{
+    if (vidx == s.length())
+    {
+        return dp[vidx] = 1;
+    }
+    if (dp[vidx] != -1)
+        return dp[vidx];
+
+    char ch = s[vidx];
+    if (ch == '0')
+        return dp[vidx] = 0;
+
+    int count = 0;
+    count += numDecodings_(s, vidx + 1, dp);
+    if (vidx < s.size() - 1)
+    {
+        int num = (ch - '0') * 10 + (s[vidx + 1] - '0');
+        if (num <= 26)
+            count += numDecodings_(s, vidx + 2, dp);
+    }
+
+    return dp[vidx] = count;
+}
+
+int numDecodings02(string &s)
+{
+
+    int a = 0;
+    int b = 1;
+
+    int ans = 0;
+    for (int i = s.length() - 1; i >= 0; i--)
+    {
+        char ch = s[i];
+        ans = 0;
+        if (ch != '0')
+        {
+            ans = b;
+            if (i < s.length() - 1)
+            {
+                int num = (ch - '0') * 10 + (s[i + 1] - '0');
+                if (num <= 26)
+                    ans += a;
+            }
+        }
+
+        a = b;
+        b = ans;
+    }
+}
+
+// int numDecodings(string s)
+// {
+//     vector<int> dp(s.length() + 1, -1);
+//     int ans = numDecodings_(s, 0, dp);
+
+//     display(dp);
+//     return ans;
+// }
+
+// void questionSet()
+// {
+//     numDecodings("1423101112");
+// }
+
+int AiBjCk(string str)
+{
+    int acount = 0;
+    int bcount = 0;
+    int count = 0;
+    for (int i = 0; i < str.length(); i++)
+    {
+        if (str[i] == 'a')
+            acount = acount + (1 + acount);
+        else if (str[i] == 'b')
+            bcount = bcount + (acount + bcount);
+        else
+            count = count + (bcount + count);
+    }
+
+    return count;
+}
+
+// https://www.hackerearth.com/practice/math/number-theory/basic-number-theory-1/tutorial/
+
+// (a+b)%c = (a%c + b%c)%c
+// (a-b)%c = (a%c - b%c + c)%c
+// (a*b)%c = (a%c * b%c )%c
+int distinctSubseqII(string str)
+{
+    int mod = 1e9 + 7;
+    str = '$' + str;
+    int n = str.length();
+    vector<long> dp(n, 0);
+    vector<int> lastOccu(26, -1);
+
+    for (int i = 0; i < n; i++)
+    {
+        if (i == 0) // empty String.
+        {
+            dp[i] = 1;
+            continue;
+        }
+
+        char ch = str[i];
+        dp[i] = (dp[i - 1] % mod * 2) % mod;
+        if (lastOccu[ch - 'a'] != -1)
+            dp[i] = dp[i] % mod - dp[lastOccu[ch - 'a'] - 1] % mod + mod;
+
+        lastOccu[ch - 'a'] = i;
+    }
+    return dp[n - 1] % mod - 1;
+}
+
+long mod = 1e9 + 7;
+long numDecodingsII_recu(string &str, int idx, vector<long> &dp)
+{
+    if (idx == str.length())
+        return 1;
+    if (dp[idx] != 0)
+        return dp[idx];
+
+    int count = 0;
+    if (str[idx] == '*')
+    {
+        count = (count % mod + 9 * numDecodingsII_recu(str, idx + 1, dp) % mod) % mod;
+        if (idx < str.length() - 1 && str[idx + 1] >= '0' && str[idx + 1] <= '6')
+            count = (count % mod + 2 * numDecodingsII_recu(str, idx + 2, dp) % mod) % mod;
+        else if (idx < str.length() - 1 && str[idx + 1] >= '7')
+            count = (count % mod + numDecodingsII_recu(str, idx + 2, dp) % mod) % mod;
+        else if (idx < str.length() - 1 && str[idx + 1] == '*')
+            count = (count % mod + 15 * numDecodingsII_recu(str, idx + 2, dp) % mod) % mod;
+    }
+    else if (str[idx] > '0')
+    {
+
+        count = (count % mod + numDecodingsII_recu(str, idx + 1, dp) % mod) % mod;
+        if (idx < str.length() - 1)
+        {
+            if (str[idx + 1] != '*')
+            {
+                int num = (str[idx] - '0') * 10 + (str[idx + 1] - '0');
+                if (num <= 26)
+                    count = (count % mod + numDecodingsII_recu(str, idx + 2, dp) % mod) % mod;
+            }
+            else if (str[idx] == '1')
+                count = (count % mod + 9 * numDecodingsII_recu(str, idx + 2, dp) % mod) % mod;
+            else if (str[idx] == '2')
+                count = (count % mod + 6 * numDecodingsII_recu(str, idx + 2, dp) % mod) % mod;
+        }
+    }
+    return dp[idx] = count;
+}
+
+long numDecodingsII_DP(string &str, int idx, vector<long> &dp)
+{
+    for (idx = str.length(); idx >= 0; idx--)
+    {
+        if (idx == str.length())
+        {
+            dp[idx] = 1;
+            continue;
+        }
+
+        int count = 0;
+        if (str[idx] == '*')
+        {
+            count = (count % mod + 9 * dp[idx + 1] % mod) % mod;
+            if (idx < str.length() - 1 && str[idx + 1] >= '0' && str[idx + 1] <= '6')
+                count = (count % mod + 2 * dp[idx + 2] % mod) % mod;
+            else if (idx < str.length() - 1 && str[idx + 1] >= '7')
+                count = (count % mod + dp[idx + 2] % mod) % mod;
+            else if (idx < str.length() - 1 && str[idx + 1] == '*')
+                count = (count % mod + 15 * dp[idx + 2] % mod) % mod;
+        }
+        else if (str[idx] > '0')
+        {
+
+            count = (count % mod + dp[idx + 1] % mod) % mod;
+            if (idx < str.length() - 1)
+            {
+                if (str[idx + 1] != '*')
+                {
+                    int num = (str[idx] - '0') * 10 + (str[idx + 1] - '0');
+                    if (num <= 26)
+                        count = (count % mod + dp[idx + 2] % mod) % mod;
+                }
+                else if (str[idx] == '1')
+                    count = (count % mod + 9 * dp[idx + 2] % mod) % mod;
+                else if (str[idx] == '2')
+                    count = (count % mod + 6 * dp[idx + 2]) % mod;
+            }
+        }
+        dp[idx] = count;
+    }
+    return dp[0];
+}
+
+long numDecodingsII_Fast(string &str, int idx, vector<long> &dp)
+{
+    long a = 0;
+    long b = 1;
+    long count = 0;
+    for (idx = str.length() - 1; idx >= 0; idx--)
+    {
+        count = 0;
+        if (str[idx] == '*')
+        {
+            count = (count % mod + 9 * b % mod) % mod;
+            if (idx < str.length() - 1 && str[idx + 1] >= '0' && str[idx + 1] <= '6')
+                count = (count % mod + 2 * a % mod) % mod;
+            else if (idx < str.length() - 1 && str[idx + 1] >= '7')
+                count = (count % mod + a % mod) % mod;
+            else if (idx < str.length() - 1 && str[idx + 1] == '*')
+                count = (count % mod + 15 * a % mod) % mod;
+        }
+        else if (str[idx] > '0')
+        {
+
+            count = (count % mod + b % mod) % mod;
+            if (idx < str.length() - 1)
+            {
+                if (str[idx + 1] != '*')
+                {
+                    int num = (str[idx] - '0') * 10 + (str[idx + 1] - '0');
+                    if (num <= 26)
+                        count = (count % mod + a % mod) % mod;
+                }
+                else if (str[idx] == '1')
+                    count = (count % mod + 9 * a % mod) % mod;
+                else if (str[idx] == '2')
+                    count = (count % mod + 6 * a) % mod;
+            }
+        }
+
+        a = b;
+        b = count;
+    }
+    return count;
+}
+
+// DP toDo :
+// 1. 132
+// 2. 044
+// 3. https://www.geeksforgeeks.org/boolean-parenthesization-problem-dp-37/
+// 4. 096
+// 5. 095
+
+int numDecodings(string str)
+{
+    vector<long> dp(str.length() + 1, 0);
+    // return (int)numDecodingsII_recu(str, 0, dp);
+    // return (int)numDecodingsII_DP(str, 0, dp);
+    return (int)numDecodingsII_Fast(str, 0, dp);
+}
+
 void LIS_Type()
 {
     vector<int> arr = {0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15};
@@ -1484,7 +1746,7 @@ void pathSet()
     // maxCoin = goldMin_DP(grid, dp);
     // cout << maxCoin << endl;
 
-    // count_of_ways(7, 3);
+    count_of_ways(7, 3);
 
     // display(dp);
     // display2D(dp);
@@ -1503,11 +1765,12 @@ void set1()
 void solve()
 {
     // set1();
-    // pathSet();
+    pathSet();
     // set2();
     // stringSubstringSet();
     // targetType();
-    LIS_Type();
+    // LIS_Type();
+    // questionSet();
 }
 
 int main()
